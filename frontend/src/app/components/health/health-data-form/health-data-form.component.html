@@ -1,0 +1,115 @@
+<div class="health-form-container">
+  <mat-card class="health-form-card">
+    <mat-card-header>
+      <mat-card-title>Saisie des données de santé</mat-card-title>
+      <mat-card-subtitle>Enregistrez vos données quotidiennes</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="healthForm" (ngSubmit)="onSubmit()">
+        <!-- Section Date -->
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Section Sommeil -->
+        <div class="section-title">Sommeil</div>
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Durée du sommeil (heures)</mat-label>
+            <input matInput type="number" formControlName="sleep_duration">
+            <mat-error *ngIf="healthForm.get('sleep_duration')?.hasError('min')">
+              La durée doit être positive
+            </mat-error>
+            <mat-error *ngIf="healthForm.get('sleep_duration')?.hasError('max')">
+              La durée ne peut pas dépasser 24 heures
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Qualité du sommeil (1-10)</mat-label>
+            <input matInput type="number" formControlName="sleep_quality">
+            <mat-error *ngIf="healthForm.get('sleep_quality')?.hasError('min')">
+              La qualité doit être au moins 1
+            </mat-error>
+            <mat-error *ngIf="healthForm.get('sleep_quality')?.hasError('max')">
+              La qualité ne peut pas dépasser 10
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Section Exercice -->
+        <div class="section-title">Exercice</div>
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Durée (minutes)</mat-label>
+            <input matInput type="number" formControlName="exercise_duration">
+            <mat-error *ngIf="healthForm.get('exercise_duration')?.hasError('min')">
+              La durée doit être positive
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Type d'exercice</mat-label>
+            <mat-select formControlName="exercise_type">
+              <mat-option *ngFor="let type of exerciseTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Calories brûlées</mat-label>
+          <input matInput type="number" formControlName="calories_burned">
+          <mat-error *ngIf="healthForm.get('calories_burned')?.hasError('min')">
+            Les calories doivent être positives
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Section Nutrition -->
+        <div class="section-title">Nutrition</div>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Calories consommées</mat-label>
+          <input matInput type="number" formControlName="calories_consumed">
+          <mat-error *ngIf="healthForm.get('calories_consumed')?.hasError('min')">
+            Les calories doivent être positives
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="third-width">
+            <mat-label>Protéines (g)</mat-label>
+            <input matInput type="number" formControlName="protein">
+            <mat-error *ngIf="healthForm.get('protein')?.hasError('min')">
+              Les protéines doivent être positives
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="third-width">
+            <mat-label>Glucides (g)</mat-label>
+            <input matInput type="number" formControlName="carbs">
+            <mat-error *ngIf="healthForm.get('carbs')?.hasError('min')">
+              Les glucides doivent être positifs
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="third-width">
+            <mat-label>Lipides (g)</mat-label>
+            <input matInput type="number" formControlName="fat">
+            <mat-error *ngIf="healthForm.get('fat')?.hasError('min')">
+              Les lipides doivent être positifs
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="!healthForm.valid">
+          Enregistrer
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div> 

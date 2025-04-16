@@ -1,0 +1,12 @@
+<div class="goals-container">
+  <h1>Objectifs</h1>
+  <select class="filter-select" [(ngModel)]="selectedCategory">
+    <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+  </select>
+  <div class="goals-list">
+    <div *ngFor="let goal of goals" class="goal-item">
+      <h3>{{ goal.title }}</h3>
+      <p>{{ goal.description }}</p>
+    </div>
+  </div>
+</div>
