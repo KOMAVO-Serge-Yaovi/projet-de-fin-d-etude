@@ -22,20 +22,42 @@ def add_health_data():
     user_id = get_jwt_identity()
     data = request.get_json()
     
+    # Validate required fields
+    if not data.get('title'):
+        return jsonify({"msg": "Le titre est obligatoire"}), 422
+    
+    if not isinstance(data.get('title'), str):
+        return jsonify({"msg": "Le titre doit être une chaîne de caractères"}), 422
+    
+    if not data.get('description'):
+        return jsonify({"msg": "La description est obligatoire"}), 422
+        
+    if not isinstance(data.get('description'), str):
+        return jsonify({"msg": "La description doit être une chaîne de caractères"}), 422
+        
+    if not data.get('category'):
+        return jsonify({"msg": "La catégorie est obligatoire"}), 422
+        
     # Création d'une nouvelle entrée de données de santé
-    health_data = HealthData(
-        user_id=user_id,
-        date=datetime.strptime(data['date'], '%Y-%m-%d').date(),
-        sleep_duration=data.get('sleep_duration'),
-        sleep_quality=data.get('sleep_quality'),
-        exercise_duration=data.get('exercise_duration'),
-        exercise_type=data.get('exercise_type'),
-        calories_burned=data.get('calories_burned'),
-        calories_consumed=data.get('calories_consumed'),
-        protein=data.get('protein'),
-        carbs=data.get('carbs'),
-        fat=data.get('fat')
-    )
+    try:
+        health_data = HealthData(
+            user_id=user_id,
+            date=datetime.strptime(data['date'], '%Y-%m-%d').date(),
+            title=data.get('title'),
+            description=data.get('description'),
+            category=data.get('category'),
+            sleep_duration=data.get('sleep_duration'),
+            sleep_quality=data.get('sleep_quality'),
+            exercise_duration=data.get('exercise_duration'),
+            exercise_type=data.get('exercise_type'),
+            calories_burned=data.get('calories_burned'),
+            calories_consumed=data.get('calories_consumed'),
+            protein=data.get('protein'),
+            carbs=data.get('carbs'),
+            fat=data.get('fat')
+        )
+    except ValueError as e:
+        return jsonify({'error': f'Invalid date format: {str(e)}'}), 400
     
     try:
         db.session.add(health_data)
@@ -45,9 +67,11 @@ def add_health_data():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@health_data_bp.route('/', methods=['GET'])
-@jwt_required()
+@health_data_bp.route('/', methods=['GET', 'OPTIONS'])
+@jwt_required(optional=True)
 def get_health_data():
+    if request.method == 'OPTIONS':
+        return '', 200
     user_id = get_jwt_identity()
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')

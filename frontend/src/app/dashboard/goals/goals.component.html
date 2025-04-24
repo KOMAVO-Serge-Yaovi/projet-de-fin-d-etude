@@ -1,12 +1,64 @@
 <div class="goals-container">
-  <h1>Objectifs</h1>
-  <select class="filter-select" [(ngModel)]="selectedCategory">
-    <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
-  </select>
+  <div class="goals-header">
+    <h1>Mes Objectifs de Santé</h1>
+    <button class="add-goal-btn" (click)="showAddGoalForm = true" *ngIf="!showAddGoalForm">
+      <span>+ Nouvel Objectif</span>
+    </button>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher un objectif...">
+    </div>
+    <select class="filter-select" [(ngModel)]="selectedCategory">
+      <option value="">Toutes les catégories</option>
+      <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+    </select>
+  </div>
+
+  <form *ngIf="showAddGoalForm" [formGroup]="goalForm" (ngSubmit)="addGoal()" class="goal-form">
+    <h2>Nouvel Objectif</h2>
+    <div class="form-group">
+      <input type="text" formControlName="title" placeholder="Titre de l'objectif">
+      <textarea formControlName="description" placeholder="Description"></textarea>
+      <select formControlName="category">
+        <option value="">Sélectionnez une catégorie</option>
+        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+      </select>
+      <input type="number" formControlName="targetValue" placeholder="Valeur cible">
+      <input type="date" formControlName="startDate">
+      <input type="date" formControlName="endDate">
+    </div>
+    <div class="form-actions">
+      <button type="submit" [disabled]="!goalForm.valid">Ajouter</button>
+      <button type="button" (click)="cancelAddGoal()">Annuler</button>
+    </div>
+  </form>
+
   <div class="goals-list">
-    <div *ngFor="let goal of goals" class="goal-item">
-      <h3>{{ goal.title }}</h3>
-      <p>{{ goal.description }}</p>
+    <div *ngFor="let goal of filteredGoals" class="goal-card">
+      <div class="goal-header">
+        <h3>{{ goal.title }}</h3>
+        <div class="goal-actions">
+          <button (click)="deleteGoal(goal)" class="delete-btn">Supprimer</button>
+        </div>
+      </div>
+      <p class="goal-description">{{ goal.description }}</p>
+      <div class="goal-details">
+        <span class="category-badge">{{ goal.category }}</span>
+        <div class="progress-section">
+          <div class="progress-bar">
+            <div class="progress" [style.width.%]="(goal.currentValue / goal.targetValue) * 100"></div>
+          </div>
+          <span class="progress-text">{{ goal.currentValue }} / {{ goal.targetValue }}</span>
+        </div>
+        <div class="date-range">
+          <span>Du {{ goal.startDate | date:'dd/MM/yyyy' }} au {{ goal.endDate | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="update-progress">
+          <input type="number" [(ngModel)]="goal.currentValue" (change)="updateGoalProgress(goal)" placeholder="Valeur actuelle">
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { RouterModule } from '@angular/router';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
@@ -11,50 +11,13 @@ import { map } from 'rxjs/operators';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="dashboard-container">
-      <nav class="sidebar">
-        <div class="user-info">
-          <img src="assets/images/avatar.png" alt="Avatar" class="avatar">
-          <h3>Bienvenue, {{ userName$ | async }}</h3>
-        </div>
-        <ul class="nav-menu">
-          <li>
-            <a routerLink="/dashboard" routerLinkActive="active">
-              <i class="icon">📊</i>
-              Tableau de bord
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/profile" routerLinkActive="active">
-              <i class="icon">👤</i>
-              Profil
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/goals" routerLinkActive="active">
-              <i class="icon">🎯</i>
-              Objectifs
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/recommendations" routerLinkActive="active">
-              <i class="icon">💡</i>
-              Recommandations
-            </a>
-          </li>
-        </ul>
-      </nav>
-
       <main class="main-content">
         <header class="header">
           <h1>Tableau de bord</h1>
           <div class="header-actions">
-            <button class="notification-btn">
+            <button class="notification-btn" (click)="handleNotificationClick()">
               <i class="icon">🔔</i>
-              <span class="notification-badge">3</span>
-            </button>
-            <button class="logout-btn" (click)="logout()">
-              <i class="icon">🚪</i>
-              Déconnexion
+              <span class="notification-badge">{{ notifCount }}</span>
             </button>
           </div>
         </header>
@@ -81,13 +44,13 @@ import { map } from 'rxjs/operators';
           <div class="chart-card">
             <h3>Activité hebdomadaire</h3>
             <div class="chart-placeholder">
-              <!-- Graphique d'activité -->
+              <canvas #weeklyActivityChart></canvas>
             </div>
           </div>
           <div class="chart-card">
             <h3>Progression des objectifs</h3>
             <div class="chart-placeholder">
-              <!-- Graphique de progression -->
+              <canvas #goalsProgressChart></canvas>
             </div>
           </div>
         </div>
@@ -169,7 +132,7 @@ import { map } from 'rxjs/operators';
       gap: 1rem;
     }
 
-    .notification-btn, .logout-btn {
+    .logout-btn {
       display: flex;
       align-items: center;
       padding: 0.5rem 1rem;
@@ -178,15 +141,6 @@ import { map } from 'rxjs/operators';
       cursor: pointer;
       background-color: white;
       color: var(--text-color);
-    }
-
-    .notification-badge {
-      background-color: #dc3545;
-      color: white;
-      border-radius: 50%;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.75rem;
-      margin-left: 0.5rem;
     }
 
     .stats-container {
@@ -229,10 +183,15 @@ import { map } from 'rxjs/operators';
     }
 
     .chart-placeholder {
-      height: 200px;
+      height: 400px;
       background-color: #f8f9fa;
       border-radius: 5px;
       margin-top: 1rem;
+    }
+
+    .chart-placeholder canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
 
     @media (max-width: 768px) {
@@ -250,21 +209,108 @@ import { map } from 'rxjs/operators';
     }
   `]
 })
-export class DashboardComponent {
-  userName$: Observable<string | null>;
+export class DashboardComponent implements AfterViewInit {
+  @ViewChild('weeklyActivityChart') weeklyActivityCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('goalsProgressChart') goalsProgressCanvas!: ElementRef<HTMLCanvasElement>;
+  
+  private weeklyActivityChart?: Chart;
+  private goalsProgressChart?: Chart;
+  notifCount = 3;
 
-  constructor(private router: Router, private authService: AuthService) {
-    this.userName$ = this.authService.currentUser$.pipe(
-      map(user => user?.first_name || 'Utilisateur')
-    );
+  ngAfterViewInit() {
+    // Use requestAnimationFrame to ensure the DOM is ready
+    requestAnimationFrame(() => {
+      try {
+        console.log('Initialisation des graphiques...');
+        this.initializeCharts();
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation des graphiques:', error);
+      }
+    });
   }
 
-  navigate(path: string) {
-    this.router.navigate([path]);
+  private initializeCharts() {
+    this.renderWeeklyActivityChart();
+    this.renderGoalsProgressChart();
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  private destroyCharts() {
+    if (this.weeklyActivityChart) {
+      this.weeklyActivityChart.destroy();
+    }
+    if (this.goalsProgressChart) {
+      this.goalsProgressChart.destroy();
+    }
+  }
+
+  ngOnDestroy() {
+    this.destroyCharts();
+  }
+
+  private renderWeeklyActivityChart() {
+    if (!this.weeklyActivityCanvas) {
+      console.error('Canvas element weeklyActivityChart not found');
+      return;
+    }
+    const ctx = this.weeklyActivityCanvas.nativeElement.getContext('2d');
+    if (!ctx) {
+      console.error('Unable to get 2D context for weeklyActivityChart');
+      return;
+    }
+
+    this.weeklyActivityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
+        datasets: [{
+          label: 'Pas',
+          data: [7500, 8200, 9000, 7000, 8500, 10000, 9500],
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  private renderGoalsProgressChart() {
+    if (!this.goalsProgressCanvas) {
+      console.error('Canvas element goalsProgressChart not found');
+      return;
+    }
+    const ctx = this.goalsProgressCanvas.nativeElement.getContext('2d');
+    if (!ctx) {
+      console.error('Unable to get 2D context for goalsProgressChart');
+      return;
+    }
+
+    this.goalsProgressChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Complété', 'Restant'],
+        datasets: [{
+          label: 'Progression des objectifs',
+          data: [70, 30],
+          backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+          borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true
+      }
+    });
+  }
+
+  handleNotificationClick() {
+    alert('Vous avez ' + this.notifCount + ' nouvelles notifications !');
   }
 }

@@ -1,0 +1,237 @@
+<div class="goals-container">
+  <div class="goal-actions">
+    <div class="header-section">
+      <h2>Mes Objectifs</h2>
+      <div class="search-container">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="filterGoals()"
+          placeholder="Rechercher un objectif..."
+          class="search-input"
+        >
+        <i class="fas fa-search search-icon"></i>
+      </div>
+    </div>
+    <button (click)="openAddGoalModal()">
+      <i class="fas fa-plus"></i> Ajouter un objectif
+    </button>
+  </div>
+
+  <!-- Loading and Error States -->
+  <div *ngIf="isLoading" class="loading-state">
+    <i class="fas fa-spinner fa-spin"></i>
+    Chargement des objectifs...
+  </div>
+
+  <div *ngIf="errorMessage" class="error-state">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <div class="goals-categories" [class.loading]="isLoading">
+    <div *ngFor="let categoryKey of availableCategories" class="category-section">
+      <h3 class="category-title">{{ getCategoryLabel(categoryKey) }}</h3>
+      
+      <div class="goals-list">
+        <div *ngFor="let goal of paginatedGoals[categoryKey].goals" class="goal-item">
+          <h4>{{ getCategoryLabel(categoryKey) }}</h4>
+          <div class="goal-details">
+            <div class="progress-container">
+              <div class="progress-label">
+                <span>{{ getCategoryValue(goal, categoryKey) }}</span>
+              </div>
+              <div class="date-label">
+                Date: {{ goal.date | date:'shortDate' }}
+              </div>
+            </div>
+            <div class="goal-actions">
+              <button class="update-btn" (click)="updateGoalProgress(goal)" [disabled]="isLoading">
+                <i class="fas" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" [class.fa-sync-alt]="!isLoading"></i>
+                {{ isLoading ? 'Mise à jour...' : 'Mettre à jour' }}
+              </button>
+              <button class="delete-btn" (click)="deleteGoal(goal)" [disabled]="isLoading">
+                <i class="fas" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" [class.fa-trash]="!isLoading"></i>
+                {{ isLoading ? 'Suppression...' : 'Supprimer' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination" *ngIf="paginatedGoals[categoryKey].totalPages > 1">
+        <button
+          [disabled]="paginatedGoals[categoryKey].currentPage === 1"
+          (click)="changePage(categoryKey, paginatedGoals[categoryKey].currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <button
+          *ngFor="let page of getPageNumbers(paginatedGoals[categoryKey].totalPages)"
+          [class.active]="page === paginatedGoals[categoryKey].currentPage"
+          (click)="changePage(categoryKey, page)">
+          {{ page }}
+        </button>
+
+        <button
+          [disabled]="paginatedGoals[categoryKey].currentPage === paginatedGoals[categoryKey].totalPages"
+          (click)="changePage(categoryKey, paginatedGoals[categoryKey].currentPage + 1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <span class="pagination-info">
+          Page {{ paginatedGoals[categoryKey].currentPage }} sur {{ paginatedGoals[categoryKey].totalPages }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <app-modal [isOpen]="showAddGoalForm" [title]="'Ajouter un objectif'" (closeModal)="cancelAddGoal()">
+    <form [formGroup]="goalForm" (ngSubmit)="addGoal()">
+      <div class="form-group">
+        <label for="title">Titre de l'objectif *</label>
+        <input id="title"
+          formControlName="title"
+          placeholder="Ex: Faire 10000 pas par jour"
+          [class.error]="formErrors['title'] && goalForm.get('title')?.touched"
+          required />
+        <span class="error-message" *ngIf="formErrors['title'] && goalForm.get('title')?.touched">
+          {{ formErrors['title'] }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description détaillée *</label>
+        <textarea id="description"
+          formControlName="description"
+          placeholder="Décrivez votre objectif et comment vous comptez l'atteindre"
+          [class.error]="formErrors['description'] && goalForm.get('description')?.touched"
+          required></textarea>
+        <span class="error-message" *ngIf="formErrors['description'] && goalForm.get('description')?.touched">
+          {{ formErrors['description'] }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Catégorie *</label>
+        <select id="category"
+          formControlName="category"
+          [class.error]="formErrors['category'] && goalForm.get('category')?.touched">
+          <option value="">Sélectionnez une catégorie</option>
+          <option *ngFor="let category of availableCategories" [value]="category">{{ getCategoryLabel(category) }}</option>
+        </select>
+        <span class="error-message" *ngIf="formErrors['category'] && goalForm.get('category')?.touched">
+          {{ formErrors['category'] }}
+        </span>
+      </div>
+
+      <!-- Category-specific fields -->
+      <ng-container *ngIf="goalForm.get('category')?.value === 'Fitness'">
+        <div class="form-group">
+          <label for="exercise_type">Type d'exercice *</label>
+          <select id="exercise_type"
+            formControlName="exercise_type"
+            [class.error]="formErrors['exercise_type'] && goalForm.get('exercise_type')?.touched">
+            <option value="">Sélectionnez un type d'exercice</option>
+            <option value="running">Course à pied</option>
+            <option value="cycling">Vélo</option>
+            <option value="swimming">Natation</option>
+            <option value="walking">Marche</option>
+            <option value="gym">Musculation</option>
+          </select>
+          <span class="error-message" *ngIf="formErrors['exercise_type'] && goalForm.get('exercise_type')?.touched">
+            {{ formErrors['exercise_type'] }}
+          </span>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="goalForm.get('category')?.value === 'Nutrition'">
+        <div class="form-group nutrition-fields">
+          <div class="nutrition-field">
+            <label for="protein">Protéines (g) *</label>
+            <input id="protein"
+              type="number"
+              formControlName="protein"
+              [class.error]="formErrors['protein'] && goalForm.get('protein')?.touched"
+              placeholder="Ex: 150" />
+            <span class="error-message" *ngIf="formErrors['protein'] && goalForm.get('protein')?.touched">
+              {{ formErrors['protein'] }}
+            </span>
+          </div>
+          
+          <div class="nutrition-field">
+            <label for="carbs">Glucides (g) *</label>
+            <input id="carbs"
+              type="number"
+              formControlName="carbs"
+              [class.error]="formErrors['carbs'] && goalForm.get('carbs')?.touched"
+              placeholder="Ex: 250" />
+            <span class="error-message" *ngIf="formErrors['carbs'] && goalForm.get('carbs')?.touched">
+              {{ formErrors['carbs'] }}
+            </span>
+          </div>
+          
+          <div class="nutrition-field">
+            <label for="fat">Lipides (g) *</label>
+            <input id="fat"
+              type="number"
+              formControlName="fat"
+              [class.error]="formErrors['fat'] && goalForm.get('fat')?.touched"
+              placeholder="Ex: 70" />
+            <span class="error-message" *ngIf="formErrors['fat'] && goalForm.get('fat')?.touched">
+              {{ formErrors['fat'] }}
+            </span>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="form-group">
+        <label for="targetValue">Valeur cible *</label>
+        <input id="targetValue"
+          type="number"
+          formControlName="targetValue"
+          [placeholder]="'Ex: ' + getTargetValuePlaceholder(goalForm.get('category')?.value)"
+          [class.error]="formErrors['targetValue'] && goalForm.get('targetValue')?.touched"
+          required />
+        <span class="error-message" *ngIf="formErrors['targetValue'] && goalForm.get('targetValue')?.touched">
+          {{ formErrors['targetValue'] }}
+        </span>
+      </div>
+
+      <div class="form-group dates">
+        <div class="date-input">
+          <label for="startDate">Date de début *</label>
+          <input id="startDate"
+            type="date"
+            formControlName="startDate"
+            [class.error]="formErrors['startDate'] && goalForm.get('startDate')?.touched"
+            required />
+          <span class="error-message" *ngIf="formErrors['startDate'] && goalForm.get('startDate')?.touched">
+            {{ formErrors['startDate'] }}
+          </span>
+        </div>
+        <div class="date-input">
+          <label for="endDate">Date de fin *</label>
+          <input id="endDate"
+            type="date"
+            formControlName="endDate"
+            [class.error]="formErrors['endDate'] && goalForm.get('endDate')?.touched"
+            required />
+          <span class="error-message" *ngIf="formErrors['endDate'] && goalForm.get('endDate')?.touched">
+            {{ formErrors['endDate'] }}
+          </span>
+        </div>
+      </div>
+
+      <p class="required-fields">* Champs obligatoires</p>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="!goalForm.valid || isLoading">
+          <i class="fas" [class.fa-spinner]="isLoading" [class.fa-spin]="isLoading" [class.fa-save]="!isLoading"></i>
+          {{ isLoading ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+        <button type="button" (click)="cancelAddGoal()" [disabled]="isLoading">Annuler</button>
+      </div>
+    </form>
+  </app-modal>
+</div>

@@ -1,0 +1,22 @@
+.goals-container {
+  // ... autres styles existants ...
+
+  .goal-item {
+    // ... autres styles existants ...
+
+    .goal-actions {
+      .delete-btn {
+        background-color: lightpink;
+        color: #dc3545;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: #c82333;
+        }
+      }
+    }
+  }
+}

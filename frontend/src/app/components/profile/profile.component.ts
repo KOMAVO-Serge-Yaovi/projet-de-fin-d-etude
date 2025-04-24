@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-profile',
@@ -14,7 +15,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
         <div class="profile-header">
           <div class="avatar-section">
             <img src="assets/images/avatar.png" alt="Avatar" class="avatar">
-            <button class="change-avatar-btn">Changer la photo</button>
+            <input type="file" (change)="changeAvatar($event)" style="display: none;" id="avatarInput">
+            <label for="avatarInput" class="change-avatar-btn">Changer la photo</label>
           </div>
           
           <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
@@ -229,7 +231,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 export class ProfileComponent {
   profileForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private http: HttpClient) {
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -244,8 +246,18 @@ export class ProfileComponent {
 
   onSubmit() {
     if (this.profileForm.valid) {
-      console.log('Formulaire soumis:', this.profileForm.value);
-      // Implémenter la logique de sauvegarde
+      const updatedProfile = this.profileForm.value;
+      this.http.put('http://127.0.0.1:5000/api/profile', updatedProfile).subscribe({
+        next: () => {
+          alert('Les modifications ont été enregistrées avec succès !');
+        },
+        error: (err) => {
+          console.error('Erreur lors de la mise à jour du profil :', err);
+          alert('Une erreur est survenue lors de l’enregistrement des modifications.');
+        }
+      });
+    } else {
+      alert('Veuillez remplir correctement tous les champs obligatoires.');
     }
   }
 
@@ -262,4 +274,21 @@ export class ProfileComponent {
     }
     return 0;
   }
-} 
+
+  changeAvatar(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e: any) => {
+        const avatarElement = document.querySelector('.avatar') as HTMLImageElement;
+        if (avatarElement) {
+          avatarElement.src = e.target.result;
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+  }
+}

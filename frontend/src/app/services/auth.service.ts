@@ -8,6 +8,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  unreadNotifCount: number;
 }
 
 export interface AuthResponse {
@@ -37,17 +38,38 @@ export class AuthService {
     );
   }
 
+  private isLocalStorageAvailable(): boolean {
+    try {
+      const testKey = '__test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   logout(): void {
-    localStorage.removeItem('access_token');
-    this.currentUserSubject.next(null);
+    if (this.isLocalStorageAvailable()) {
+      localStorage.removeItem('access_token');
+    }
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('access_token');
+    if (this.isLocalStorageAvailable()) {
+      return !!localStorage.getItem('access_token');
+    }
+    return false;
   }
 
   private handleAuthResponse(response: AuthResponse): void {
-    localStorage.setItem('access_token', response.access_token);
+    this.setAccessToken(response);
     this.currentUserSubject.next(response.user);
+  }
+
+  setAccessToken(response: any): void {
+    if (this.isLocalStorageAvailable()) {
+      localStorage.setItem('access_token', response.access_token);
+    }
   }
 }
