@@ -70,6 +70,7 @@ import { map } from 'rxjs/operators';
 
     .sidebar {
       position: fixed;
+      z-index: 10s;
       left: 0;
       top: 0;
       height: 100%;

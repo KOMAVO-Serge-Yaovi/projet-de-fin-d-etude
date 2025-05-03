@@ -8,7 +8,7 @@ Modèle HealthData :
   - calories_burned : Calories brûlées.
 """
 
-from app import db
+from database import db
 from datetime import datetime
 
 class HealthData(db.Model):

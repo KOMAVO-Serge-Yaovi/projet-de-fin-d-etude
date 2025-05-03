@@ -19,6 +19,11 @@ class User(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
+    phone = db.Column(db.String(20))
+    birth_date = db.Column(db.Date)
+    gender = db.Column(db.String(10))
+    height = db.Column(db.Float)
+    weight = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -37,6 +42,11 @@ class User(db.Model):
             'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name,
+            'phone': self.phone,
+            'birth_date': self.birth_date.isoformat() if self.birth_date else None,
+            'gender': self.gender,
+            'height': self.height,
+            'weight': self.weight,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

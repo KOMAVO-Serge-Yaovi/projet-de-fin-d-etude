@@ -36,7 +36,13 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          this.errorMessage = 'Email ou mot de passe incorrect';
+          if (error.status === 401) {
+            this.errorMessage = 'Email ou mot de passe incorrect';
+          } else if (error.status === 0) {
+            this.errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet ou réessayez plus tard.';
+          } else {
+            this.errorMessage = 'Une erreur est survenue lors de la connexion. Veuillez réessayer.';
+          }
           console.error('Erreur de connexion:', error);
         }
       });

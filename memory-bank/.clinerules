@@ -1,0 +1,147 @@
+# Project Intelligence & Patterns
+
+## Project Structure
+- Angular frontend in `frontend/` directory
+- Flask backend in `backend/` directory
+- Memory Bank documentation in `memory-bank/` directory
+
+## Code Patterns
+
+### Angular Patterns
+1. Component Organization
+   - Feature-based directory structure
+   - Shared components in `components/` directory
+   - Services in `services/` directory
+   - Models in `models/` directory
+
+2. Naming Conventions
+   - Components: `feature.component.ts`
+   - Services: `feature.service.ts`
+   - Models: `feature.types.ts`
+   - Tests: `feature.spec.ts`
+
+3. File Structure
+   ```
+   feature/
+   ├── feature.component.ts
+   ├── feature.component.html
+   ├── feature.component.scss
+   └── feature.component.spec.ts
+   ```
+
+### Python Patterns
+1. Directory Structure
+   ```
+   backend/
+   ├── routes/      # API endpoints
+   ├── models/      # Database models
+   └── tests/       # Test files
+   ```
+
+2. Naming Conventions
+   - Routes: `feature.py`
+   - Models: `feature_model.py`
+   - Tests: `test_feature.py`
+
+## Development Workflow
+
+### Git Practices
+1. Branch naming:
+   - Feature: `feature/description`
+   - Fix: `fix/description`
+   - Refactor: `refactor/description`
+
+2. Commit messages:
+   - feat: New features
+   - fix: Bug fixes
+   - docs: Documentation
+   - refactor: Code refactoring
+   - test: Testing
+   - chore: Maintenance
+
+### Code Style
+1. TypeScript:
+   - Use strict mode
+   - Explicit types
+   - Interfaces over types
+   - Single responsibility
+
+2. Python:
+   - PEP 8 compliance
+   - Type hints
+   - Docstrings
+   - Clean function design
+
+## Key Implementation Details
+
+### Authentication
+- JWT token stored in localStorage
+- Token refresh mechanism
+- Protected route guards
+- HTTP interceptors
+
+### State Management
+- Service-based state
+- Observable patterns
+- Reactive forms
+- Local storage caching
+
+### API Integration
+- RESTful endpoints
+- JWT authentication
+- Error handling
+- Response formatting
+
+## User Preferences
+- Clean, minimal UI
+- Responsive design
+- Performance focus
+- Security priority
+
+## Project Evolution Insights
+1. Initial Focus
+   - Core authentication
+   - Basic health tracking
+   - Simple goal system
+
+2. Current Phase
+   - Enhanced tracking
+   - Advanced goals
+   - Recommendations
+
+3. Future Direction
+   - ML integration
+   - Device connectivity
+   - Social features
+
+## Known Patterns
+1. Data Management
+   - Health data validation
+   - Goal progress calculation
+   - Data aggregation
+   - Metric tracking
+
+2. User Flow
+   - Authentication flow
+   - Data entry process
+   - Goal setting
+   - Progress tracking
+
+3. Error Handling
+   - API error responses
+   - Form validation
+   - Data constraints
+   - User feedback
+
+## Learning Points
+1. Technical Decisions
+   - Angular for frontend
+   - Flask for backend
+   - SQLAlchemy ORM
+   - JWT authentication
+
+2. Project Insights
+   - User-focused design
+   - Data security priority
+   - Performance optimization
+   - Scalable architecture

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.health_data import HealthData
 from models.recommendation_model import HealthRecommendationModel
-from app import db
+from database import db
 
 recommendations_bp = Blueprint('recommendations', __name__)
 recommendation_model = HealthRecommendationModel()

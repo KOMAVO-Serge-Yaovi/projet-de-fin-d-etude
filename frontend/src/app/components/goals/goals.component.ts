@@ -5,6 +5,8 @@ import { ModalComponent } from '../shared/modal/modal.component';
 import { HealthDataService, HealthData } from '../../services/health-data.service';
 import { CategoryType, CATEGORIES, CATEGORY_MAPPINGS } from '../../models/category.types';
 import { finalize } from 'rxjs';
+import { HttpHeaders } from '@angular/common/http';
+
 
 @Component({
   selector: 'app-goals',

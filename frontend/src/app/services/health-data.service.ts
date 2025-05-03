@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-
+const headers = new HttpHeaders({
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Access-Control-Allow-Origin': 'http://localhost:4200',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Origin, Authorization'
+});
 export interface HealthData {
   id?: number;
   user_id: number;
@@ -52,7 +57,7 @@ export class HealthDataService {
   }
 
   addHealthData(data: HealthData): Observable<HealthData> {
-    return this.http.post<HealthData>(`${this.API_URL}`, data)
+    return this.http.post<HealthData>(`${this.API_URL}`, data,{headers})
       .pipe(
         retry({ count: environment.retryAttempts, delay: environment.retryDelay }),
         catchError(this.handleError)
@@ -69,7 +74,7 @@ export class HealthDataService {
       params = params.set('end_date', endDate);
     }
 
-    return this.http.get<HealthData[]>(this.API_URL, { params })
+    return this.http.get<HealthData[]>(this.API_URL, { params,headers })
       .pipe(
         retry({ count: environment.retryAttempts, delay: environment.retryDelay }),
         catchError(this.handleError)
@@ -77,7 +82,7 @@ export class HealthDataService {
   }
 
   updateHealthData(id: number, data: Partial<HealthData>): Observable<HealthData> {
-    return this.http.put<HealthData>(`${this.API_URL}/${id}`, data)
+    return this.http.put<HealthData>(`${this.API_URL}/${id}`, data,{headers})
       .pipe(
         retry({ count: environment.retryAttempts, delay: environment.retryDelay }),
         catchError(this.handleError)
@@ -85,7 +90,7 @@ export class HealthDataService {
   }
 
   deleteHealthData(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`)
+    return this.http.delete<void>(`${this.API_URL}/${id}`,{headers})
       .pipe(
         retry({ count: environment.retryAttempts, delay: environment.retryDelay }),
         catchError(this.handleError)

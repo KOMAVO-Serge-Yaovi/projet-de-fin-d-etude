@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
@@ -12,20 +12,22 @@ from flask_caching import Cache
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, 
+CORS(app,
      resources={r"/api/*": {
-         "origins": ["http://localhost:4200"],
-         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+         "origins": ["http://localhost:4200", "http://127.0.0.1:4200"],
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+         "allow_headers": ["Content-Type", "Authorization", "X-Auth-Token", "Origin", "Accept", "X-Requested-With"],
+         "expose_headers": ["Content-Type", "Authorization", "X-Auth-Token"],
          "supports_credentials": True,
-         "expose_headers": ["Content-Type", "Authorization"],
          "max_age": 3600
-     }})
+     }},
+     supports_credentials=True)
 
-@app.after_request
-def after_request(response):
+@app.route('/api/auth/', methods=['OPTIONS'])
+def handle_auth_options():
+    response = make_response()
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
@@ -35,7 +37,7 @@ def after_request(response):
 def handle_health_data_options():
     response = make_response()
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Auth-Token,Origin,Accept')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
@@ -44,13 +46,31 @@ def handle_health_data_options():
 def handle_health_data_item_options(data_id):
     response = make_response()
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Auth-Token,Origin,Accept')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+@app.route('/api/goals/', methods=['OPTIONS'])
+def handle_goals_options():
+    response = make_response()
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Auth-Token,Origin,Accept')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
+@app.route('/api/goals/<int:goal_id>', methods=['OPTIONS'])
+def handle_goals_item_options(goal_id):
+    response = make_response()
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Auth-Token,Origin,Accept')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
 # Configuration de la base de données pour Colab
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///health_tracker.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'votre_cle_secrete')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
@@ -66,6 +86,8 @@ cache.init_app(app)
 from routes.auth import auth_bp
 from routes.health_data import health_data_bp
 from routes.recommendations import recommendations_bp
+from routes.goals import goals_bp
+from routes.profile import profile_bp
 
 @app.route('/')
 def index():
@@ -75,17 +97,10 @@ def index():
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(health_data_bp, url_prefix='/api/health_data')
 app.register_blueprint(recommendations_bp, url_prefix='/api/recommendations')
+app.register_blueprint(goals_bp, url_prefix='/api/goals')
+app.register_blueprint(profile_bp, url_prefix='/api')
 
-@app.route('/api/profile', methods=['PUT'])
-def update_profile():
-    try:
-        data = request.json
-        print("Données reçues :", data)
-        # Logique pour mettre à jour le profil dans la base de données
-        return jsonify({"message": "Profil mis à jour avec succès"}), 200
-    except Exception as e:
-        print("Erreur lors de la mise à jour du profil :", str(e))
-        return jsonify({"error": "Une erreur est survenue lors de la mise à jour du profil."}), 500
+# Route supprimée car gérée par le blueprint profile_bp
 
 @app.errorhandler(400)
 def handle_bad_request(e):

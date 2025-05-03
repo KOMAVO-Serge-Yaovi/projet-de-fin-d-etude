@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+
+const headers = new HttpHeaders({
+  'Content-Type': 'application/json'
+});
 
 export interface User {
   id: number;
@@ -27,13 +31,19 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   register(userData: { email: string; password: string; first_name: string; last_name: string }): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/register`, userData).pipe(
+    return this.http.post<AuthResponse>(`${this.API_URL}/register`, userData, { 
+      headers,
+      withCredentials: true 
+    }).pipe(
       tap(response => this.handleAuthResponse(response))
     );
   }
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials, { 
+      headers,
+      withCredentials: true 
+    }).pipe(
       tap(response => this.handleAuthResponse(response))
     );
   }
